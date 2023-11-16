@@ -1,6 +1,6 @@
 function cfdSetOperators
 
-tol = 1E-9;     %Cleaning tolerance
+tol = 1E-9;     % Cleaning tolerance
 
 global Region;
 
@@ -17,19 +17,19 @@ owners = cfdGetOwners;
 allNeighbours = cfdGetAllNeighbours;
 
 Sfs = cfdGetFaceSf;
-Sfs = Sfs.*(abs(Sfs)>tol);      %Clean small values
+Sfs = Sfs.*(abs(Sfs)>tol);      % Clean small values
 
 CcfsIn = Region.mesh.faceCF;
-CcfsIn = CcfsIn.*(abs(CcfsIn)>tol);   %Clean small values
+CcfsIn = CcfsIn.*(abs(CcfsIn)>tol);   % Clean small values
 
 Cofs = Region.mesh.faceCf;
-Cofs = Cofs.*(abs(Cofs)>tol);   %Clean small values
+Cofs = Cofs.*(abs(Cofs)>tol);   % Clean small values
 
 CVolsIn = cfdGetVolumesForElements;
 
-%Erase connection to empty type ghost cells
-%Set boundary-ghost distance and cyclic boundary pair distance
-%Set ghost cell volumes
+% Erase connection to empty type ghost cells
+% Set boundary-ghost distance and cyclic boundary pair distance
+% Set ghost cell volumes
 Tfo = sparse(owners, 1:length(owners), 1, ncTot, theNumberOfFaces);
 Tfn = sparse(allNeighbours, 1:length(allNeighbours), 1, ncTot, theNumberOfFaces);
 
@@ -79,8 +79,8 @@ Tfc = Tfo + Tfn;
 
 Ccfs = Tff*CcfsIn;
 
-%Construct geometric matrices
-%N.B empty cells do have geometric values, just no connection
+% Construct geometric matrices
+% N.B empty cells do have geometric values, just no connection
 Sf = spdiags(Sfs, double(theNumberOfFaces)*[0, 1, 2], theNumberOfFaces, 3*theNumberOfFaces);
 Nf = normr(Sf);
 Af = spdiags(sqrt(sum(Sfs.^2,2)), 0, theNumberOfFaces, theNumberOfFaces);
@@ -103,7 +103,7 @@ OmegaCIn = sparse(1:theNumberOfElements, 1:theNumberOfElements, CVolsIn, theNumb
 OmegaIn = kron(eye(3), OmegaCIn);
 OmegaSIn = Af*DnfIn;
 
-%Construct derived matrices
+% Construct derived matrices
 % - Compact differential operators
 M = (Tfo-Tfn)*Af;
 G = -OmegaS\M.';
@@ -142,7 +142,7 @@ Mc = M*GamCS;
 Gc = -Omega\(GamCS.'*M.');
 
 % - Laplacian coefficient matrix
-%First set up the matrix only considering internal connections
+% First set up the matrix only considering internal connections
 Lap = M(1:theNumberOfElements, 1:theNumberOfInteriorFaces)*G(1:theNumberOfInteriorFaces, 1:theNumberOfElements);
 for iBPatch = 1:theNumberOfBoundaryPatches
     BType = Region.fluid.p.boundaryPatchRef{iBPatch}.type;
@@ -176,7 +176,7 @@ for iBPatch = 1:theNumberOfBoundaryPatches
 end
 
 
-%Set Region variables
+% Set Region variables
 Region.operators.Tfo = Tfo;
 Region.operators.Tfn = Tfn;
 Region.operators.Tfc = Tfc;
