@@ -21,6 +21,5 @@ end
 
 nStages = size(aTab, 1) - 1;
 
-%Region.foamDictionary.fvSchemes.ddtSchemes.RK = RKSchemeName;
 Region.foamDictionary.fvSchemes.ddtSchemes.RK.aTab = aTab;
 Region.foamDictionary.fvSchemes.ddtSchemes.RK.nStages = nStages;
