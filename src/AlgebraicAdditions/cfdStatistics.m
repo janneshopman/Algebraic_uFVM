@@ -20,7 +20,7 @@ else
     Ccb = 0;
 end
 
-%Calc kinetic energy
+% Calculate kinetic energy
 EKin = 0.5*cfdGetInternalField(U, 'vvf')'*op.OmegaIn*cfdGetInternalField(U, 'vvf')/sum(diag(op.OmegaCIn));
 
 %Calc Courant
