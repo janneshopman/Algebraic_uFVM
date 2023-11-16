@@ -10,7 +10,7 @@ p = cfdGetField('p');
 U = cfdGetField('U');
 Uf = cfdGetField('Uf');
 
-%Calc checkerboarding
+% Calculate checkerboarding coefficient
 pLcp = -diag(op.OmegaIn)'*cfdGetInternalField(op.Gc*p, 'vvf').^2;
 pLp = -diag(op.OmegaSIn)'*(op.G*p).^2;
 
@@ -23,7 +23,7 @@ end
 % Calculate kinetic energy
 EKin = 0.5*cfdGetInternalField(U, 'vvf')'*op.OmegaIn*cfdGetInternalField(U, 'vvf')/sum(diag(op.OmegaCIn));
 
-%Calc Courant
+% Calculate Courant number
 CoField = 0.5*deltaT*cfdGetInternalField(op.OmegaC\(op.Tfc*abs(op.Af*Uf)), 'vsf');
 maxCo = max(CoField);
 meanCo = sum(op.OmegaCIn*CoField)/sum(diag(op.OmegaCIn));
