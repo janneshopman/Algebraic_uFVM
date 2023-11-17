@@ -30,7 +30,7 @@ for iStage = 1:RK.nStages + 1
     U = UOld + dUs*RK.aTab(iStage, :)'; % - sum(RK.aTab(iStage,:)) * deltaT * pnPredCoef * op.Gc * pOld (3)
     cfdBCUpdate(U, 'U');
 
-    if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     %skip stage if first & explicit
+    if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     % Skip stage if first & explicit
 
         divU = cfdGetInternalField(op.Mc * U, 'vsf');
 

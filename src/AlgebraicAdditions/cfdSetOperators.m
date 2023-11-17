@@ -82,8 +82,8 @@ Ccfs = Tff*CcfsIn;
 % Construct geometric matrices
 % N.B empty cells do have geometric values, just no connection
 Sf = spdiags(Sfs, double(theNumberOfFaces)*[0, 1, 2], theNumberOfFaces, 3*theNumberOfFaces);
-Nf = normr(Sf);
 Af = spdiags(sqrt(sum(Sfs.^2,2)), 0, theNumberOfFaces, theNumberOfFaces);
+Nf = Af\Sf;
 Ccf = spdiags(Ccfs, double(theNumberOfFaces)*[0, 1, 2], theNumberOfFaces, 3*theNumberOfFaces);
 Cof = spdiags(Cofs, double(theNumberOfFaces)*[0, 1, 2], theNumberOfFaces, 3*theNumberOfFaces);
 Cnf = Ccf - Cof;
@@ -141,9 +141,10 @@ GamSC = Omega\(GamCS.'*OmegaS);
 Mc = M*GamCS;
 Gc = -Omega\(GamCS.'*M.');
 
-% - Laplacian coefficient matrix
+% - Laplacian coefficient matrix for pressure
 % First set up the matrix only considering internal connections
 Lap = M(1:theNumberOfElements, 1:theNumberOfInteriorFaces)*G(1:theNumberOfInteriorFaces, 1:theNumberOfElements);
+RHSMod = sparse(theNumberOfElements, 1);
 for iBPatch = 1:theNumberOfBoundaryPatches
     BType = Region.fluid.p.boundaryPatchRef{iBPatch}.type;
        
@@ -152,9 +153,32 @@ for iBPatch = 1:theNumberOfBoundaryPatches
     iBFaces = cfdGetBFaceIndicesForBoundaryPatch(iBPatch);
     owners_b = cfdGetOwnersSubArrayForBoundaryPatch(iBPatch);    
 
-    if strcmp(BType, 'cyclic')
-        %Add internal connections
-        %RHS b adds 0
+    if strcmp(BType, 'fixedValue') || strcmp(BType, 'noSlip')
+        % Add diagonal coefficient to Lap
+        % Add RHS modification
+
+        % Initialize BC value as 0 for noSlip
+        theBCValue = zeros(length(iBFaces), 1);
+        
+        % Change value if fixedValue
+        if strcmp(BType, 'fixedValue')
+            theBCValue = cfdValueForBoundaryPatch(Region.fluid.p.name, iBPatch);
+
+            % Extend to vector if uniform value is provided
+            if size(theBCValue, 1)==1
+                theBCValue = theBCValue*ones(length(iBFaces),1);
+            end
+        end
+
+        % Calculate coefficients
+        faceCoefs = -2*(diag(Dnf).\diag(Af));
+
+        % Modify diagonal and RHS
+        Lap = Lap + sparse(owners_b, owners_b, faceCoefs(iBFaces), theNumberOfElements, theNumberOfElements);
+        RHSMod(owners_b) = RHSMod(owners_b) + faceCoefs(iBFaces).*theBCValue;
+    elseif strcmp(BType, 'cyclic')
+        % Add internal connections
+        % RHS b adds 0
         iNBPatch = theBCInfo.neighbourPatchId;
                 
         owners_Nb = cfdGetOwnersSubArrayForBoundaryPatch(iNBPatch);  
@@ -167,11 +191,13 @@ for iBPatch = 1:theNumberOfBoundaryPatches
 
         Lap(indicesCellOD) = Lap(indicesCellOD) + coeffs;
         Lap(indicesCellD) = Lap(indicesCellD) - coeffs;
-    elseif strcmp(BType, 'zeroGradient')
-        %Do nothing, Lap(i,i) only contains internal coefficients
-        %RHS b adds 0
-    elseif strcmp(BType, 'empty')
-        %Do nothing
+    elseif strcmp(BType, 'zeroGradient') ...
+            || strcmp(BType, 'slip') ...
+            || strcmp(BType, 'outlet') ...
+            || strcmp(BType, 'symmetry') ...
+            || strcmp(BType, 'empty')
+        % Do nothing, Lap(i,i) only contains internal coefficients
+        % RHS b adds 0
     end
 end
 

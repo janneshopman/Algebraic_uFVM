@@ -183,7 +183,10 @@ for iFile=1:length(files)
             
             % Get info
             theBCInfo = boundaries{iBPatch};
-            
+
+            theBCInfo.name
+
+
             numberOfBFaces = theBCInfo.numberOfBFaces;
             iFaceStart = theBCInfo.startFaceIndex;
             
@@ -199,7 +202,8 @@ for iFile=1:length(files)
             
             % Read bounday value
             value = cfdGetKeyValueFromBlock('value', ['boundaryField/', theBCInfo.name], fieldFilePath);
-            
+            error('wrong value here for upperboundary pressure - resume on Monday') %%
+
             if isempty(value)
                 if strcmp(theMeshField.type, 'volScalarField') || strcmp(theMeshField.type, 'surfaceScalarField')
                     boundaryPatchRef.value = 0;

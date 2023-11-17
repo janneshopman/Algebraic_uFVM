@@ -82,7 +82,11 @@ theScalarField = cfdGetMeshField(theFieldName);
 
 % Apply cfdBoundary condition
 theBCValue = cfdValueForBoundaryPatch(theFieldName, iBPatch);
-theScalarField.phi(iBElements) = 2.0*theBCValue - theScalarField.phi(owners_b);
+if size(theBCValue, 1)>1
+    theScalarField.phi(iBElements) = 2.0*theBCValue - theScalarField.phi(owners_b);
+else
+    theScalarField.phi(iBElements) = 2.0*theBCValue*ones(length(iBElements),1) - theScalarField.phi(owners_b);
+end
 
 % Store
 cfdSetMeshField(theScalarField);
