@@ -184,9 +184,6 @@ for iFile=1:length(files)
             % Get info
             theBCInfo = boundaries{iBPatch};
 
-            theBCInfo.name
-
-
             numberOfBFaces = theBCInfo.numberOfBFaces;
             iFaceStart = theBCInfo.startFaceIndex;
             
@@ -201,8 +198,16 @@ for iFile=1:length(files)
             boundaryPatchRef.type = type;
             
             % Read bounday value
-            value = cfdGetKeyValueFromBlock('value', ['boundaryField/', theBCInfo.name], fieldFilePath);
-            error('wrong value here for upperboundary pressure - resume on Monday') %%
+            value = '';
+            if ~strcmp(type, 'zeroGradient') ...
+                && ~strcmp(type, 'slip') ...
+                && ~strcmp(type, 'noSlip') ...
+                && ~strcmp(type, 'outlet') ...
+                && ~strcmp(type, 'symmetry') ...
+                && ~strcmp(type, 'empty') ...
+                && ~strcmp(type, 'cyclic')
+                    value = cfdGetKeyValueFromBlock('value', ['boundaryField/', theBCInfo.name], fieldFilePath);
+            end
 
             if isempty(value)
                 if strcmp(theMeshField.type, 'volScalarField') || strcmp(theMeshField.type, 'surfaceScalarField')
@@ -246,13 +251,12 @@ for iFile=1:length(files)
             end
             
             theMeshField.boundaryPatchRef{iBPatch} = boundaryPatchRef;
-            
-        end
         
-        % Clear boundaryPatchRef
-        structureFields = fieldnames(boundaryPatchRef);
-        for structureFieldName=structureFields
-            boundaryPatchRef = rmfield(boundaryPatchRef, structureFieldName);
+            % Clear boundaryPatchRef
+            structureFields = fieldnames(boundaryPatchRef);
+            for structureFieldName=structureFields
+                boundaryPatchRef = rmfield(boundaryPatchRef, structureFieldName);
+            end
         end
     end
     

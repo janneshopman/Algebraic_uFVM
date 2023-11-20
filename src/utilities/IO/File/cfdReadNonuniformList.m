@@ -1,13 +1,6 @@
+%AlgebraicAdjustment
 function list = cfdReadNonuniformList(key, fileDirectory, varargin)
-%--------------------------------------------------------------------------
-%
-%  Written by the CFD Group @ AUB, Fall 2018
-%  Contact us at: cfd@aub.edu.lb
-%==========================================================================
-% Routine Description:
-%   This function reads the list from a nonuniform List
-%--------------------------------------------------------------------------
-%
+
 % Read File
 fileID = fopen(fileDirectory, 'r');
 
@@ -112,6 +105,10 @@ while(~feof(fileID))
             
             fgetl(fileID);
             
+            if ~listLength>0
+                error('List not readable - might be written inline')
+            end
+
             if strcmp(fieldClass, '<scalar>')
                 for i=1:listLength
                     tline = fgetl(fileID);
