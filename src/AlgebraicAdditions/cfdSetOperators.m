@@ -10,6 +10,7 @@ theNumberOfElements = cfdGetNumberOfElements;
 theNumberOfFaces = cfdGetNumberOfFaces;
 theNumberOfInteriorFaces = cfdGetNumberOfInteriorFaces;
 theNumberOfBFaces = cfdGetNumberOfBFaces;
+theNumberOfBoundaryPatches = cfdGetNumberOfBPatches;
 
 ncTot = theNumberOfElements + theNumberOfBFaces;
 
@@ -38,7 +39,6 @@ Tff = speye(theNumberOfFaces);
 CVols = zeros(ncTot, 1);
 CVols(1:theNumberOfElements) = CVolsIn;
 
-theNumberOfBoundaryPatches = cfdGetNumberOfBPatches;
 for iBPatch=1:theNumberOfBoundaryPatches
     theBCInfo = cfdGetBoundaryPatchRef(iBPatch);
 
@@ -141,67 +141,6 @@ GamSC = Omega\(GamCS.'*OmegaS);
 Mc = M*GamCS;
 Gc = -Omega\(GamCS.'*M.');
 
-% - Laplacian coefficient matrix for pressure
-% First set up the matrix only considering internal connections
-Lap = M(1:theNumberOfElements, 1:theNumberOfInteriorFaces)*G(1:theNumberOfInteriorFaces, 1:theNumberOfElements);
-RHSMod = sparse(theNumberOfElements, 1);
-for iBPatch = 1:theNumberOfBoundaryPatches
-    BType = Region.fluid.p.boundaryPatchRef{iBPatch}.type;
-       
-    theBCInfo = cfdGetBoundaryPatchRef(iBPatch);
-
-    iBFaces = cfdGetBFaceIndicesForBoundaryPatch(iBPatch);
-    owners_b = cfdGetOwnersSubArrayForBoundaryPatch(iBPatch);    
-
-    if strcmp(BType, 'fixedValue') || strcmp(BType, 'noSlip')
-        % Add diagonal coefficient to Lap
-        % Add RHS modification
-
-        % Initialize BC value as 0 for noSlip
-        theBCValue = zeros(length(iBFaces), 1);
-        
-        % Change value if fixedValue
-        if strcmp(BType, 'fixedValue')
-            theBCValue = cfdValueForBoundaryPatch(Region.fluid.p.name, iBPatch);
-
-            % Extend to vector if uniform value is provided
-            if size(theBCValue, 1)==1
-                theBCValue = theBCValue*ones(length(iBFaces),1);
-            end
-        end
-
-        % Calculate coefficients
-        faceCoefs = -2*(diag(Dnf).\diag(Af));
-
-        % Modify diagonal and RHS
-        Lap = Lap + sparse(owners_b, owners_b, faceCoefs(iBFaces), theNumberOfElements, theNumberOfElements);
-        RHSMod(owners_b) = RHSMod(owners_b) + faceCoefs(iBFaces).*theBCValue;
-    elseif strcmp(BType, 'cyclic')
-        % Add internal connections
-        % RHS b adds 0
-        iNBPatch = theBCInfo.neighbourPatchId;
-                
-        owners_Nb = cfdGetOwnersSubArrayForBoundaryPatch(iNBPatch);  
-
-        indicesFaceD = sub2ind(size(Af), iBFaces, iBFaces);
-        indicesCellD = sub2ind(size(Lap), owners_b, owners_b);
-        indicesCellOD = sub2ind(size(Lap), owners_b, owners_Nb);
-
-        coeffs = Af(indicesFaceD)./Dnf(indicesFaceD);
-
-        Lap(indicesCellOD) = Lap(indicesCellOD) + coeffs;
-        Lap(indicesCellD) = Lap(indicesCellD) - coeffs;
-    elseif strcmp(BType, 'zeroGradient') ...
-            || strcmp(BType, 'slip') ...
-            || strcmp(BType, 'outlet') ...
-            || strcmp(BType, 'symmetry') ...
-            || strcmp(BType, 'empty')
-        % Do nothing, Lap(i,i) only contains internal coefficients
-        % RHS b adds 0
-    end
-end
-
-
 % Set Region variables
 Region.operators.Tfo = Tfo;
 Region.operators.Tfn = Tfn;
@@ -249,5 +188,3 @@ Region.operators.GamSC = GamSC;
 
 Region.operators.Mc= Mc;
 Region.operators.Gc = Gc;
-
-Region.operators.Lap = Lap;

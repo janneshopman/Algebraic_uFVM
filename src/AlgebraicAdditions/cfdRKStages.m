@@ -27,23 +27,31 @@ for iStage = 1:RK.nStages + 1
     % Stage increment of U
     % Is there a better way to include a pressure prediction?
     % Perhaps using updated intermediate values of pressure?
-    U = UOld + dUs*RK.aTab(iStage, :)'; % - sum(RK.aTab(iStage,:)) * deltaT * pnPredCoef * op.Gc * pOld (3)
+    U = UOld + dUs*RK.aTab(iStage, :)'; % - sum(RK.aTab(iStage,:)) * deltaT * pnPredCoef * op.Gc * pOld (To do - 3)
     cfdBCUpdate(U, 'U');
 
     if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     % Skip stage if first & explicit
-
         divU = cfdGetInternalField(op.Mc * U, 'vsf');
+        source = divU + deltaT*op.Pois.addSource;
 
         % Intermediate p used for predictor, is it optimal?
         dtp = deltaT * cfdGetInternalField(p, 'vsf');
 
-        % Before Poisson equation, b has to be updated according to bc (1)
-        % And reference pressure has to be set (2)
-        % Include preconditioner (4)
-        [dtp, flag, relres, iter, resvec] = pcg(-op.Lap, -divU, sol.tolerance, sol.maxIter, speye(size(dtp, 1)), speye(size(dtp, 1)), dtp);
+        % Include preconditioner (To do - 4)
+        [dtp, flag, relres, iter, resvec] = pcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtp, 1)), speye(size(dtp, 1)), dtp);
+
+        res = op.Pois.Lap * dtp - source;
+        addToPressure = (10-dtp(1)/deltaT);
+        newdtp = dtp + addToPressure*deltaT;
+        res2 = op.Pois.Lap * newdtp - source;
+
+        res'*res
+        res2'*res2
 
         p = cfdSetInternalField(p, dtp/deltaT, 'vsf');
         p = cfdBCUpdate(p, 'p');
+
+        p(1)
 
         % Velocity update
         U = U - deltaT * op.Gc * p;
@@ -68,7 +76,7 @@ for iStage = 1:RK.nStages + 1
     end
 end
 
-% p = pnPredCoef*pOld + p; (3)
+% p = pnPredCoef*pOld + p; (To do - 3)
 
 cfdSetField(p, 'p');
 cfdSetField(U, 'U');
