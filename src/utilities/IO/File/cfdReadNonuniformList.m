@@ -93,7 +93,13 @@ while(~feof(fileID))
         if strcmp(C{1}{1}, key)
             
             while ~strcmp(C{1}{1}, 'value')
-                C = textscan(fgetl(fileID), '%s nonuniform List%s', 1);
+                line = fgetl(fileID);
+                if contains(line, '(') && contains(line, ')')
+                    C = textscan(line, '%s nonuniform List%s %d()', 1);
+                    error('can''t read inline lists')
+                else
+                    C = textscan(line, '%s nonuniform List%s', 1);
+                end
             end
             
             % Read class (scalar or cfdVector)
@@ -102,13 +108,9 @@ while(~feof(fileID))
             % Read list length
             C = textscan(fgetl(fileID), '%d', 1);
             listLength = C{1};
-            
+
             fgetl(fileID);
             
-            if ~listLength>0
-                error('List not readable - might be written inline')
-            end
-
             if strcmp(fieldClass, '<scalar>')
                 for i=1:listLength
                     tline = fgetl(fileID);

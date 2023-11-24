@@ -55,7 +55,7 @@ numberOfNeighbours = C{1};
 neighbours = cfdLabelList(numberOfNeighbours);
 
 % Check if neighbours are given inline
-if contains(tline, '(')
+if contains(tline, '(') && contains(line, ')')
     i = strfind(tline, '(');
     neighbours = [1 + str2double(strsplit(tline(i+1:end-1), ' '))]';
 else

@@ -80,8 +80,8 @@ if pRefRequired
     iCell = Region.foamDictionary.fvSolution.SIMPLE.pRefCell;
     value = Region.foamDictionary.fvSolution.SIMPLE.pRefValue;
 
-    addSource(iCell) = addSource(iCell) + Lap(iCell,iCell)*value; 
-    Lap(iCell,iCell) = 2*Lap(iCell,iCell);
+   addSource(iCell) = addSource(iCell) + Lap(iCell,iCell)*value; 
+   Lap(iCell,iCell) = 2*Lap(iCell,iCell);
 end
 
 Region.operators.Pois.Lap = Lap;

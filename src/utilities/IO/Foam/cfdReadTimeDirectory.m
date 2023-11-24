@@ -121,7 +121,7 @@ for iFile=1:length(files)
             % Read bounday value
             value = cfdGetKeyValueFromBlock('value', ['boundaryField/', theBCInfo.name], fieldFilePath);
             
-            if isempty(value)
+            if isempty(value) || strcmp(type, 'empty')
                 boundaryPatchRef.value = 0;
                 
                 theMeshField.boundaryPatchRef{iBPatch} = boundaryPatchRef;
@@ -149,6 +149,7 @@ for iFile=1:length(files)
                 theMeshField.phi(iFaceStart:iFaceEnd) = valueList;
                 boundaryPatchRef.value = valueList;
             end
+
             
             theMeshField.boundaryPatchRef{iBPatch} = boundaryPatchRef;
 

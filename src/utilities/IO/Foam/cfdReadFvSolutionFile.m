@@ -1,12 +1,5 @@
+%AlgebraicAdjustment
 function cfdReadFvSolutionFile
-%--------------------------------------------------------------------------
-%
-%  Written by the CFD Group @ AUB, Fall 2018
-%  Contact us at: cfd@aub.edu.lb
-%==========================================================================
-% Routine Description:
-%   This function read fvSolution file
-%--------------------------------------------------------------------------
 
 fprintf('\nReading fvSolution file ...\n');
 
@@ -44,7 +37,7 @@ for iField=1:length(fieldNamesToSolve)
     
     % Additional default settings
     if ~isfield(Region.foamDictionary.fvSolution.solvers.(fieldName), 'maxIter')
-        Region.foamDictionary.fvSolution.solvers.(fieldName).maxIter = 20;
+        Region.foamDictionary.fvSolution.solvers.(fieldName).maxIter = 1000;
     end
     
     if strcmp(Region.foamDictionary.fvSolution.solvers.(fieldName).solver, 'GAMG')
