@@ -38,35 +38,7 @@ for iStage = 1:RK.nStages + 1
         dtp = deltaT * cfdGetInternalField(p, 'vsf');
 
         % Include preconditioner (To do - 4)
-        %LapM = diag(diag(op.Pois.Lap));    %Jacobi
-        LapM = tril(op.Pois.Lap);           %GS
-        [dtpJac, relresJac, iterJac, resvecJac] = cfdIterativeSolver(op.Pois.Lap, LapM, source, sol.tolerance, sol.maxIter, dtp);
-
-        fprintf('\nJac: relres: %8.7f, iter: %d\n', relresJac, iterJac);
-
-        [dtppcg, flag, relrespcg, iterpcg, resvecpcg] = pcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtp, 1)), speye(size(dtp, 1)), dtp);
-
-        if flag == 0
-            fprintf('\npcg: relres: %8.7f, iter: %d\n', relrespcg, iterpcg);
-        end
-
-        switch flag
-            case 1
-                error('PCG iterated MAXIT times but did not converge.');
-                pcgMsg = true;
-            case 2
-                error('preconditioner M was ill-conditioned.');
-                pcgMsg = true;
-            case 3 
-                error('PCG stagnated (two consecutive iterates were the same).');
-                pcgMsg = true;
-            case 4 
-                error('one of the scalar quantities calculated during PCG became too small or too large to continue computing.');
-                pcgMsg = true;
-            otherwise
-        end
-
-        dtp = dtppcg;
+        [dtp, relres, iterpcg, resvec] = cfdCheckpcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtp, 1)), speye(size(dtp, 1)), dtp);
 
         p = cfdSetInternalField(p, dtp/deltaT, 'vsf');
         p = cfdBCUpdate(p, 'p');
