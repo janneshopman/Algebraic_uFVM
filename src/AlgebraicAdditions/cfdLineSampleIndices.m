@@ -20,7 +20,7 @@ function sampleIndices = cfdLineSampleIndices(mesh, beginCoordinate, endCoordina
     FN = sparse(neighbours, 1:double(theNumberOfInteriorFaces), 1, theNumberOfElements, theNumberOfFaces);
     FC = FO-FN;
     
-    for iLP = 1:length(linePoints)
+    for iLP = 1:size(linePoints,1)
         LP = linePoints(iLP,:);
     
         for iEl = 1:theNumberOfElements

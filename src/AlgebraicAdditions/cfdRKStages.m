@@ -6,7 +6,11 @@ op = Region.operators;
 
 RK = Region.foamDictionary.fvSchemes.ddtSchemes.RK;
 
-sol = Region.foamDictionary.fvSolution.solvers.p;
+if isfield(Region.foamDictionary.fvSolution.solvers, 'pFinal')
+    sol = Region.foamDictionary.fvSolution.solvers.pFinal;
+else
+    sol = Region.foamDictionary.fvSolution.solvers.p;
+end
 
 theNumberOfFaces = cfdGetNumberOfFaces;
 
@@ -54,7 +58,7 @@ for iStage = 1:RK.nStages + 1
         end
 
         % Experiment with mixed Laplacian
-        % Us = op.GamCS*U+op.LMix*(op.GamCS*op.GamSC - speye(geo.nf))*op.G * dtp; (5)
+        % Us = op.GamCS*U+op.LMix*(op.GamCS*op.GamSC - speye(geo.nf))*op.G * dtp; (To do - 5)
     end
 
     if iStage <= RK.nStages

@@ -77,8 +77,8 @@ for iBPatch = 1:theNumberOfBoundaryPatches
 end
 
 if pRefRequired
-    iCell = Region.foamDictionary.fvSolution.SIMPLE.pRefCell;
-    value = Region.foamDictionary.fvSolution.SIMPLE.pRefValue;
+    iCell = Region.foamDictionary.fvSolution.AlguFVM.pRefCell;
+    value = Region.foamDictionary.fvSolution.AlguFVM.pRefValue;
 
    addSource(iCell) = addSource(iCell) + Lap(iCell,iCell)*value; 
    Lap(iCell,iCell) = 2*Lap(iCell,iCell);

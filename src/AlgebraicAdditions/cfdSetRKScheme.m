@@ -4,13 +4,13 @@ global Region;
 
 fprintf('\nSetting RKScheme\n');
 
-RKSchemeName = Region.foamDictionary.fvSchemes.ddtSchemes.default;
+RKSchemeName = Region.foamDictionary.fvSolution.AlguFVM.scheme;
 
 %prep RK tableau
-if strcmp(RKSchemeName, 'Euler')
+if strcmp(RKSchemeName, 'ForwardEuler')
     aTab = zeros(2, 1);
     aTab(2, 1) = 1;
-elseif strcmp(RKSchemeName, 'RK3')
+elseif strcmp(RKSchemeName, 'Kutta')
     aTab = zeros(4, 3);
     aTab(2, 1) = 1/2;
     aTab(3, 1:2) = [-1, 2];

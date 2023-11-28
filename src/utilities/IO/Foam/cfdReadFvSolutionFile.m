@@ -55,25 +55,34 @@ for iField=1:length(fieldNamesToSolve)
     end
 end
 
-% SIMPLE control
-entryNames = fieldnames(fvSolutionDict.SIMPLE);
+% AlguFVM control
+entryNames = fieldnames(fvSolutionDict.AlguFVM);
 for iEntry=1:length(entryNames)
-    if ~isstruct(fvSolutionDict.SIMPLE.(entryNames{iEntry}))
+    if ~isstruct(fvSolutionDict.AlguFVM.(entryNames{iEntry}))
         if strcmp(entryNames{iEntry}, 'pRefCell')
-            Region.foamDictionary.fvSolution.SIMPLE.(entryNames{iEntry}) = eval(fvSolutionDict.SIMPLE.(entryNames{iEntry})) + 1;
+            Region.foamDictionary.fvSolution.AlguFVM.(entryNames{iEntry}) = eval(fvSolutionDict.AlguFVM.(entryNames{iEntry})) + 1;
+        elseif strcmp(entryNames{iEntry}, 'pRefPoint')
+            pointString = fvSolutionDict.AlguFVM.(entryNames{iEntry});
+            i = strfind(pointString, '(');
+            pointArray = [str2double(strsplit(pointString(i+1:end-1), ' '))]';
+            Region.foamDictionary.fvSolution.AlguFVM.(entryNames{iEntry}) = pointArray;
         else
-            Region.foamDictionary.fvSolution.SIMPLE.(entryNames{iEntry}) = eval(fvSolutionDict.SIMPLE.(entryNames{iEntry}));
+            try
+                Region.foamDictionary.fvSolution.AlguFVM.(entryNames{iEntry}) = eval(fvSolutionDict.AlguFVM.(entryNames{iEntry}));
+            catch
+                Region.foamDictionary.fvSolution.AlguFVM.(entryNames{iEntry}) = fvSolutionDict.AlguFVM.(entryNames{iEntry});
+            end
         end
     else
         % Residual control
         if strcmp(entryNames{iEntry}, 'residualControl')
-            fieldNames = fieldnames(fvSolutionDict.SIMPLE.residualControl);
+            fieldNames = fieldnames(fvSolutionDict.AlguFVM.residualControl);
             for iField=1:length(fieldNames)
                 fieldName = fieldNames{iField};
                 if ~isempty(find(strcmp(fieldNamesToSolve,fieldName)))
-                    Region.foamDictionary.fvSolution.SIMPLE.residualControl.(fieldName) = eval(fvSolutionDict.SIMPLE.residualControl.(fieldName));
+                    Region.foamDictionary.fvSolution.AlguFVM.residualControl.(fieldName) = eval(fvSolutionDict.AlguFVM.residualControl.(fieldName));
                 else
-                    Region.foamDictionary.fvSolution.SIMPLE.residualControl.(fieldName) = 1e-6;
+                    Region.foamDictionary.fvSolution.AlguFVM.residualControl.(fieldName) = 1e-6;
                 end
             end
         end
@@ -81,11 +90,17 @@ for iEntry=1:length(entryNames)
 end
 
 % Default reference cell index and value
-if ~isfield(Region.foamDictionary.fvSolution.SIMPLE, 'pRefCell')
-    Region.foamDictionary.fvSolution.SIMPLE.pRefCell = 1;
+if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'pRefCell')
+    if isfield(Region.foamDictionary.fvSolution.AlguFVM, 'pRefPoint')
+        pRefPoint = Region.foamDictionary.fvSolution.AlguFVM.pRefPoint';
+        pRefCell = cfdLineSampleIndices(Region.mesh, pRefPoint, pRefPoint, 1);
+    else
+        pRefCell = 1;
+    end
+    Region.foamDictionary.fvSolution.AlguFVM.pRefCell = pRefCell;
 end
-if ~isfield(Region.foamDictionary.fvSolution.SIMPLE, 'pRefValue')
-    Region.foamDictionary.fvSolution.SIMPLE.pRefValue = 0;
+if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'pRefValue')
+    Region.foamDictionary.fvSolution.AlguFVM.pRefValue = 0;
 end
 
 % Relaxation factors

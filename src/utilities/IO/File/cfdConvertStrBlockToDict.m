@@ -1,13 +1,5 @@
+%AlgebraicAdjustment
 function dict = cfdConvertStrBlockToDict(block_str)
-%--------------------------------------------------------------------------
-%
-%  Written by the CFD Group @ AUB, Fall 2018
-%  Contact us at: cfd@aub.edu.lb
-%==========================================================================
-% Routine Description:
-%   This function checks if a block exists in the string str, and returns a
-%   dict containing the keys and values available in str
-%--------------------------------------------------------------------------
 
 dict = struct;
 
@@ -96,15 +88,54 @@ if length(indices)>1
             ind = ind(end);
             blockName = blockName(ind+1:end);
         end
-        
+
         ind = strfind(block_str, blockName); ind = ind(end);
         removeInterval = [removeInterval ind:ind+length(blockName)-1];
         
         % Remove block
         removeInterval = [removeInterval bracelets_pos(C{i,1}(1)):bracelets_pos(C{i,1}(2))];
-        
-        % Read block
-        dict.(blockName) = cfdConvertStrBlockToDict(block_str(bracelets_pos(C{i,1}(1)):bracelets_pos(C{i,1}(2))));
+
+        % Rewrite referenced blocks
+        nextBlock_str = block_str(bracelets_pos(C{i,1}(1)):bracelets_pos(C{i,1}(2)));
+        if contains(nextBlock_str, '$')
+            dollarSignsAt = strfind(nextBlock_str, '$')
+
+            for iDollarSign = 1:length(dollarSignsAt)
+                dollarSignAt = dollarSignsAt(iDollarSign);
+                semicolonsAfter = strfind(nextBlock_str(dollarSignAt:end), ';')
+                semicolonAt = semicolonsAfter(1)+dollarSignAt-1;
+                replacingDict = nextBlock_str(dollarSignAt+1:semicolonAt-1)
+
+                if isfield(dict, replacingDict)
+                    fieldNames = fieldnames(dict.(replacingDict))
+
+                    replacingString = ''
+
+                    for iFieldName = 1:numel(fieldNames)
+                        fieldName = fieldNames{iFieldName}
+                        fieldValue = dict.(replacingDict).(fieldName)
+
+                        replacingString = [replacingString fieldName ' ' num2str(fieldValue) '; ']
+                    end
+
+                    nextBlock_str = strcat(nextBlock_str(1:dollarSignAt-1), replacingString, nextBlock_str(semicolonAt+1:end))
+                end
+            end
+        end
+
+        if ~contains(blockName, '|')
+            dict.(blockName) = cfdConvertStrBlockToDict(nextBlock_str);
+        else 
+            arrayStartIndex = strfind(blockName, '(');
+            arrayEndIndex = strfind(blockName, ')');
+            arrayElements = strsplit(blockName(arrayStartIndex+1:arrayEndIndex-1), '|');
+            appendage = blockName(arrayEndIndex+1:end-1);
+
+            for iEl = 1:length(arrayElements)
+                subBlockName = strcat(arrayElements{iEl},appendage);
+                dict.(subBlockName) = cfdConvertStrBlockToDict(nextBlock_str);
+            end
+        end
     end
     
     block_str(removeInterval) = [];
@@ -148,13 +179,15 @@ else
         
         % Get key
         key = textscan(C_str{i}, '%s', 1); key = key{1}{1};
+        lKeyOF = length(key);
         key_start = strfind(C_str{i}, key);
+        key = erase(key, ["(", ")", ","]);
         if length(key_start)>1
             key_start = key_start(1);
         end
         
         % Get value
-        value = strtrim(C_str{i}((key_start+length(key)):end));
+        value = strtrim(C_str{i}((key_start+lKeyOF):end));
         
         % Store
         dict.(key) = value;

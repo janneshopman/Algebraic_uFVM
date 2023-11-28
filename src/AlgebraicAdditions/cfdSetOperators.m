@@ -127,11 +127,11 @@ GamCSV = Nf*kron(eye(3), PiCSV);
 GamSCV = Omega\(GamCSV.'*OmegaS);
 
 % - Collocated differential operators
-if strcmp(Region.foamDictionary.fvSchemes.interpolationSchemes.default, 'linear')
+if strcmp(Region.foamDictionary.fvSolution.AlguFVM.interpolation, 'linear')
     PiCS = PiCSL;
-elseif strcmp(Region.foamDictionary.fvSchemes.interpolationSchemes.default, 'midpoint')
+elseif strcmp(Region.foamDictionary.fvSolution.AlguFVM.interpolation, 'midpoint')
     PiCS = PiCSM;
-elseif strcmp(Region.foamDictionary.fvSchemes.interpolationSchemes.default, 'volumetric')
+elseif strcmp(Region.foamDictionary.fvSolution.AlguFVM.interpolation, 'volumetric')
     PiCS = PiCSV;
 end
 

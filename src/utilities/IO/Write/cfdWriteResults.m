@@ -29,7 +29,7 @@ if cfdIsTransient
                 cfdWriteOpenFoamField(theFieldNames{iField}, runTime);
             end
         end
-    elseif strcmp(writeControl, 'runTime')
+    elseif strcmp(writeControl, 'runTime') || strcmp(writeControl, 'adjustableRunTime')
         checkTime = runTime + deltaT*1E-6;      %to avoid float comparison problems
         if floor(checkTime/writeInterval) == floor((checkTime - deltaT)/writeInterval) + 1
             if ~cfdIsFolderExists(num2str(runTime))

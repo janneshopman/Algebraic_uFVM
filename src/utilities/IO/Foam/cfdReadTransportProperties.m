@@ -40,19 +40,26 @@ for iProperty=1:length(properties)
         properties{iProperty}.value(duplicateIndex:duplicateIndex+length(properties{iProperty}.key)-1) = '';
     end
     
-    C = textscan(properties{iProperty}.value, '[%d %d %d %d %d %d %d] %f');
+    if contains(properties{iProperty}.value, '[') && contains(line, ']')
+        C = textscan(properties{iProperty}.value, '[%d %d %d %d %d %d %d] %f');
     
-    % Value
-    propertyValue = C{8};
+        % Value
+        propertyValue = C{8};
+       
+        % Dimensions
+        propertyDimensions = [C{1} C{2} C{3} C{4} C{5} C{6} C{7}];
+        if isempty(propertyDimensions)
+            error('%s does not have dimensions\n');
+        end
+    else
+        C = textscan(properties{iProperty}.value, '%f');
+        propertyValue = C{1};
+        propertyDimensions = [];
+    end
+
     if isempty(propertyValue)
         error('%s does not have a value\n');
-    end
-    
-    % Dimensions
-    propertyDimensions = [C{1} C{2} C{3} C{4} C{5} C{6} C{7}];
-    if isempty(propertyDimensions)
-        error('%s does not have dimensions\n');
-    end
+    end        
     
     Region.foamDictionary.transportProperties.(propertyName).name = propertyName;
     Region.foamDictionary.transportProperties.(propertyName).dimensions = propertyDimensions;
