@@ -98,31 +98,32 @@ if length(indices)>1
         % Rewrite referenced blocks
         nextBlock_str = block_str(bracelets_pos(C{i,1}(1)):bracelets_pos(C{i,1}(2)));
         if contains(nextBlock_str, '$')
-            dollarSignsAt = strfind(nextBlock_str, '$')
+            dollarSignsAt = strfind(nextBlock_str, '$');
 
             for iDollarSign = 1:length(dollarSignsAt)
                 dollarSignAt = dollarSignsAt(iDollarSign);
-                semicolonsAfter = strfind(nextBlock_str(dollarSignAt:end), ';')
+                semicolonsAfter = strfind(nextBlock_str(dollarSignAt:end), ';');
                 semicolonAt = semicolonsAfter(1)+dollarSignAt-1;
-                replacingDict = nextBlock_str(dollarSignAt+1:semicolonAt-1)
+                replacingDict = nextBlock_str(dollarSignAt+1:semicolonAt-1);
 
                 if isfield(dict, replacingDict)
-                    fieldNames = fieldnames(dict.(replacingDict))
+                    fieldNames = fieldnames(dict.(replacingDict));
 
-                    replacingString = ''
+                    replacingString = '';
 
                     for iFieldName = 1:numel(fieldNames)
-                        fieldName = fieldNames{iFieldName}
-                        fieldValue = dict.(replacingDict).(fieldName)
+                        fieldName = fieldNames{iFieldName};
+                        fieldValue = dict.(replacingDict).(fieldName);
 
-                        replacingString = [replacingString fieldName ' ' num2str(fieldValue) '; ']
+                        replacingString = [replacingString fieldName ' ' num2str(fieldValue) '; '];
                     end
 
-                    nextBlock_str = strcat(nextBlock_str(1:dollarSignAt-1), replacingString, nextBlock_str(semicolonAt+1:end))
+                    nextBlock_str = strcat(nextBlock_str(1:dollarSignAt-1), replacingString, nextBlock_str(semicolonAt+1:end));
                 end
             end
         end
 
+	% Handle combined blocks
         if ~contains(blockName, '|')
             dict.(blockName) = cfdConvertStrBlockToDict(nextBlock_str);
         else 

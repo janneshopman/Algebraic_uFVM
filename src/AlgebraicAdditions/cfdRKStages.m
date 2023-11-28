@@ -3,15 +3,21 @@ function cfdRKStages
 global Region;
 
 op = Region.operators;
+fvSol = Region.foamDictionary.fvSolution;
 
 RK = Region.foamDictionary.fvSchemes.ddtSchemes.RK;
 
-if isfield(Region.foamDictionary.fvSolution.solvers, 'pFinal')
-    sol = Region.foamDictionary.fvSolution.solvers.pFinal;
+if isfield(fvSol.solvers, 'pFinal')
+    sol = fvSol.solvers.pFinal;
 else
-    sol = Region.foamDictionary.fvSolution.solvers.p;
+    sol = fvSol.solvers.p;
 end
 
+pnPredCoef = fvSol.AlguFVM.pnPredCoef;
+LapStencil = fvSol.AlguFVM.LapStencil;
+PWIM = fvSol.AlguFVM.PWIM;
+
+theNumberOfElements = cfdGetNumberOfElements;
 theNumberOfFaces = cfdGetNumberOfFaces;
 
 deltaT = cfdGetDeltaT;
@@ -19,46 +25,44 @@ deltaT = cfdGetDeltaT;
 nu = Region.foamDictionary.transportProperties.nu.propertyValue;
 
 p = cfdGetField('p');
+pCorr = cfdGetField('pCorr');
 U = cfdGetField('U');
 Uf = cfdGetField('Uf');
 
 % Reset for RK scheme
+pPred = pnPredCoef * p;
+dtpCorr = deltaT * cfdGetInternalField(pCorr, 'vsf');
 UOld = U;
-pOld = p;
 dUs = zeros(size(U, 1), RK.nStages);
 
 for iStage = 1:RK.nStages + 1
     % Stage increment of U
-    % Is there a better way to include a pressure prediction?
-    % Perhaps using updated intermediate values of pressure?
-    U = UOld + dUs*RK.aTab(iStage, :)'; % - sum(RK.aTab(iStage,:)) * deltaT * pnPredCoef * op.Gc * pOld (To do - 3)
-    U = cfdBCUpdate(U, 'U');
+    Ucp = UOld + dUs*RK.aTab(iStage, :)' - sum(RK.aTab(iStage,:)) * deltaT * op.Gc * pPred;
+    Ucp = cfdBCUpdate(Ucp, 'Ucp');
 
     if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     % Skip stage if first & explicit
-        divU = cfdGetInternalField(op.Mc * U, 'vsf');
-        source = divU + deltaT*op.Pois.addSource;
-
-        % Intermediate p used for predictor, is it optimal?
-        dtp = deltaT * cfdGetInternalField(p, 'vsf');
+        divUcp = cfdGetInternalField(op.Mc * Ucp, 'vsf');
+        source = divUcp + deltaT*op.Pois.addSource;
 
         % Include preconditioner (To do - 4)
-        [dtp, relres, iterpcg, resvec] = cfdCheckpcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtp, 1)), speye(size(dtp, 1)), dtp);
+        dtpCorr = cfdCheckpcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtpCorr, 1)), speye(size(dtpCorr, 1)), dtpCorr);
 
-        p = cfdSetInternalField(p, dtp/deltaT, 'vsf');
-        p = cfdBCUpdate(p, 'p');
+        pCorr = cfdSetInternalField(pCorr, dtpCorr/deltaT, 'vsf');
+        pCorr = cfdBCUpdate(pCorr, 'pCorr');
 
         % Velocity update
-        U = U - deltaT * op.Gc * p;
-        U = cfdBCUpdate(U, 'U');
+        U = Ucp - deltaT * op.Gc * pCorr;
+        Uf = op.GamCS*Ucp - deltaT * op.G * pCorr;
 
-        if strcmp(Region.foamDictionary.fvSchemes.laplacianSchemes.default, 'compact')
-            Uf = op.GamCS*U + deltaT * (op.GamCS*op.GamSC - speye(theNumberOfFaces)) * op.G * p;
-        else
-            Uf = op.GamCS*U;
+        if ~PWIM
+            if strcmpi(LapStencil, 'compact')
+                U = U + (op.GamSC*op.GamCS - speye(theNumberOfElements)) * Ucp;
+            elseif strcmpi(LapStencil, 'wide')
+                Uf = Uf + deltaT * (speye(theNumberOfFaces) - op.GamCS*op.GamSC) * op.G * pCorr;
+            end
         end
 
-        % Experiment with mixed Laplacian
-        % Us = op.GamCS*U+op.LMix*(op.GamCS*op.GamSC - speye(geo.nf))*op.G * dtp; (To do - 5)
+        U = cfdBCUpdate(U, 'U');
     end
 
     if iStage <= RK.nStages
@@ -70,8 +74,10 @@ for iStage = 1:RK.nStages + 1
     end
 end
 
-% p = pnPredCoef*pOld + p; (To do - 3)
+p = pPred + pCorr;
+p = cfdBCUpdate(p, 'p');
 
 cfdSetField(p, 'p');
+cfdSetField(p, 'pCorr');
 cfdSetField(U, 'U');
 cfdSetField(Uf, 'Uf');
