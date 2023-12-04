@@ -4,8 +4,20 @@ function caseStruct = cfdReadRemoteCase(caseDirectory, timeDirectory)
     end
 
     if ~exist('timeDirectory', 'var')
-        timeDirectories = cfdGetTimeSteps;
-        timeDirectory = num2str(max(timeDirectories));
+        files = dir(caseDirectory);
+        i = 1;
+        for iFile=1:length(files)
+            fileName = files(iFile).name;
+            if files(iFile).isdir && ~strcmp(fileName, '.') && ~strcmp(fileName, '..')
+                if ~isnan(str2double(fileName))
+                    timeSteps(i, 1) = eval(fileName);
+                    i = i + 1;
+                end
+            end
+        end
+        
+        timeSteps = sort(timeSteps, 1, 'ascend');
+        timeDirectory = num2str(max(timeSteps));
     end
 
     global Region;

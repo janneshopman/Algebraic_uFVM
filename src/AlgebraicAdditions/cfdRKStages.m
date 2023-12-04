@@ -29,36 +29,54 @@ pCorr = cfdGetField('pCorr');
 U = cfdGetField('U');
 Uf = cfdGetField('Uf');
 
-% Reset for RK scheme
+% Pressure predictor
+% Higher order pPred:
+% if pPredOrder == 0
+%     pPred = 0;
+% elseif pPredOrder == 1
+%     pPred = p;
+% elseif pPredOrder == 2
+%     pPred = alpha*p^{n-1} + (1-alpha)*p^n;
+% end
+% Attuned with a 0-1 coefficient:
+% pPred = pnPredCoef * pPred;
+% For now just implement first order
 pPred = pnPredCoef * p;
+
+% Reset values for RK stages
 dtpCorr = deltaT * cfdGetInternalField(pCorr, 'vsf');
 UOld = U;
 dUs = zeros(size(U, 1), RK.nStages);
 
 for iStage = 1:RK.nStages + 1
+    % Calculate fractional time step
+    cdt = sum(RK.aTab(iStage,:))*deltaT;
+
     % Stage increment of U
-    Ucp = UOld + dUs*RK.aTab(iStage, :)' - sum(RK.aTab(iStage,:)) * deltaT * op.Gc * pPred;
+    % if second order pPred is used, than the value can be extrapolated for
+    % stages in this line
+    Ucp = UOld + dUs*RK.aTab(iStage, :)' - cdt * op.Gc * pPred;
     Ucp = cfdBCUpdate(Ucp, 'Ucp');
 
-    if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     % Skip stage if first & explicit
+    if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     % Skip stage if (first & explicit)
         divUcp = cfdGetInternalField(op.Mc * Ucp, 'vsf');
-        source = divUcp + deltaT*op.Pois.addSource;
+        source = divUcp + cdt * op.Pois.addSource;
 
         % Include preconditioner (To do - 4)
         dtpCorr = cfdCheckpcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtpCorr, 1)), speye(size(dtpCorr, 1)), dtpCorr);
 
-        pCorr = cfdSetInternalField(pCorr, dtpCorr/deltaT, 'vsf');
+        pCorr = cfdSetInternalField(pCorr, dtpCorr/cdt, 'vsf');
         pCorr = cfdBCUpdate(pCorr, 'pCorr');
 
         % Velocity update
-        U = Ucp - deltaT * op.Gc * pCorr;
-        Uf = op.GamCS*Ucp - deltaT * op.G * pCorr;
+        U = Ucp - cdt * op.Gc * pCorr;
+        Uf = op.GamCS*Ucp - cdt * op.G * pCorr;
 
         if ~PWIM
             if strcmpi(LapStencil, 'compact')
                 U = U + (op.GamSC*op.GamCS - speye(theNumberOfElements)) * Ucp;
             elseif strcmpi(LapStencil, 'wide')
-                Uf = Uf + deltaT * (speye(theNumberOfFaces) - op.GamCS*op.GamSC) * op.G * pCorr;
+                Uf = Uf + cdt * (speye(theNumberOfFaces) - op.GamCS*op.GamSC) * op.G * pCorr;
             end
         end
 

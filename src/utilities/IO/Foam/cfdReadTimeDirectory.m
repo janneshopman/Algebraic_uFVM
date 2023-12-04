@@ -43,7 +43,7 @@ for iFile=1:length(files)
     % get field name from file name
     fieldName = files(iFile).name;
     fieldFilePath = [caseDirectoryPath, filesep, timeDirectory, filesep, fieldName];
-    
+    fieldName = erase(fieldName, ["(", ")", ","]);
     % Open field in read mode
     fid = fopen(fieldFilePath, 'r');
     

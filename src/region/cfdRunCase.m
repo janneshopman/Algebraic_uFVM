@@ -3,9 +3,11 @@ function cfdRunCase
 
 cfdStatistics;
 
+global Region
+
 % Start steady false transience loop
 while (cfdDoTransientLoop)
-    
+
     % Time settings
     cfdUpdateRunTime;
     
