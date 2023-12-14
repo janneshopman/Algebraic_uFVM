@@ -1,14 +1,5 @@
+%AlgebraicAdjustment
 function [dictionary, tline] = cfdReadCfdDictionary(fileID, dictionaryName)
-%--------------------------------------------------------------------------
-%
-%  Written by the CFD Group @ AUB, Fall 2018
-%  Contact us at: cfd@aub.edu.lb
-%==========================================================================
-% Routine Description:
-%   This function reads a dictionary which is defined as a title in
-%   addition to a block of keys and values. This function has to be
-%   provided with a file stream (an opened file).
-%--------------------------------------------------------------------------
 
 % Reset position
 frewind(fileID);
@@ -82,12 +73,13 @@ else
 end
 
 % Read contents
-C = strsplit(block_str, ';');
+pattern = ';(?=(?:[^"]*"[^"]*")*[^"]*$)';
+C = regexp(block_str, pattern, 'split');
 for i=1:length(C)
     if isempty(strtrim(C{i}))
         continue;
     end
-    
+
     % Get key
     key = textscan(C{i}, '%s', 1); key = key{1}{1};  
     key_start = strfind(C{i}, key); 
