@@ -14,6 +14,27 @@ else
 end
 
 pnPredCoef = fvSol.AlguFVM.pnPredCoef;
+
+if pnPredCoef < 0.0
+    deltaT = cfdGetDeltaT;
+    
+    p = cfdGetField('p');
+    U = cfdGetField('U');
+    Uf = cfdGetField('Uf');
+    
+    % Calculate checkerboarding coefficient
+    pLcp = -diag(op.OmegaIn)'*cfdGetInternalField(op.Gc*p, 'vvf').^2;
+    pLp = -diag(op.OmegaSIn)'*(op.G*p).^2;
+    
+    if ~pLp == 0
+        Ccb = 1 - pLcp/pLp;
+    else
+        Ccb = 0;
+    end    
+
+    pnPredCoef = 1- Ccb;
+end
+
 LapStencil = fvSol.AlguFVM.LapStencil;
 PWIM = fvSol.AlguFVM.PWIM;
 

@@ -50,8 +50,12 @@ while ~feof(fid)
     end
     
     if length(tline)>1
-        if strcmp(strtrim(tline(1:2)),'//')
-            continue;
+        if contains(tline, '//')
+            tline = extractBefore(tline, '//');
+        end
+
+        if contains(tline, '/*') && contains(tline, '*/')
+            tline = extractBetween(tline, '/*', '*/');
         end
     end
     

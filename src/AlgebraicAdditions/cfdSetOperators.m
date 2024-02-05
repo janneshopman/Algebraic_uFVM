@@ -98,10 +98,12 @@ DnfIn = Nf*CcfIn';
 
 OmegaC = sparse(1:ncTot, 1:ncTot, CVols, ncTot, ncTot);
 Omega  = kron(eye(3), OmegaC);
-OmegaS = Af*Dnf;
 OmegaCIn = sparse(1:theNumberOfElements, 1:theNumberOfElements, CVolsIn, theNumberOfElements, theNumberOfElements);
 OmegaIn = kron(eye(3), OmegaCIn);
+
+OmegaS = Af*Dnf;
 OmegaSIn = Af*DnfIn;
+
 
 % Construct derived matrices
 % - Compact differential operators
@@ -163,9 +165,9 @@ Region.operators.DnfIn = DnfIn;
 
 Region.operators.OmegaC = OmegaC;
 Region.operators.Omega  = Omega;
-Region.operators.OmegaS = OmegaS;
 Region.operators.OmegaCIn = OmegaCIn;
 Region.operators.OmegaIn  = OmegaIn;
+Region.operators.OmegaS = OmegaS;
 Region.operators.OmegaSIn = OmegaSIn;
 
 Region.operators.M = M;
