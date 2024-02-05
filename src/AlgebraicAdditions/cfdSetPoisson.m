@@ -1,5 +1,7 @@
 function cfdSetPoisson
 
+tol = 1E-9;     % Cleaning tolerance
+
 global Region;
 
 stencil = Region.foamDictionary.fvSolution.AlguFVM.LapStencil;
@@ -8,7 +10,6 @@ M = Region.operators.M;
 G = Region.operators.G;
 Af = Region.operators.Af;
 Dnf = Region.operators.Dnf;
-OmIn = Region.operators.OmegaIn;
 GamCS = Region.operators.GamCS;
 GamSC = Region.operators.GamSC;
 
@@ -36,7 +37,9 @@ else
 end
 
 % Trick to make symmetric
-Lap = (Lap + Lap.')/2.0; 
+minDiag = abs(min(diag(Lap)));
+Lap = Lap.*(abs(Lap)>tol*minDiag);
+Lap = (Lap + Lap.')/2.0;
 
 addSource = sparse(theNumberOfElements, 1);
 pRefRequired = true;
