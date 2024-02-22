@@ -3,9 +3,26 @@ function cfdReadTimeDirectory(varargin)
 
 global Region;
 
-if nargin>0
-    timeDirectory = varargin{1};
-else
+timeDirectory = '';
+readFields = [];
+
+% Set arguments, both optional, but timeDirectory should come first
+if nargin >= 1
+    if ischar(varargin{1})
+        timeDirectory = varargin{1};
+    elseif iscell(varargin{1})
+        readFields = string(varargin{1});
+    end
+end
+
+if nargin == 2
+    if iscell(varargin{2})
+        readFields = string(varargin{2});
+    end
+end
+
+% Set timeDirectory if not set previously
+if strcmp(timeDirectory, '')
     controlDict = Region.foamDictionary.controlDict;
     
     if strcmp(controlDict.startFrom, 'startTime')
@@ -38,6 +55,12 @@ theNumberOfInteriorFaces = cfdGetNumberOfInteriorFaces;
 for iFile=1:length(files)
     if (files(iFile).bytes)==0 || (files(iFile).isdir)
         continue;
+    end
+
+    if ~isempty(readFields)
+        if ~ismember(files(iFile).name, readFields)
+            continue;
+        end
     end
     
     % get field name from file name

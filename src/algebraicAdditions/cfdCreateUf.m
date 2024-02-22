@@ -13,9 +13,14 @@ if ~cfdIsFieldAvailable('Uf')
     theMeshField.dimensions = [0, 1, -1, 0, 0, 0, 0];
     
     % Read and store internal field
-    U = cfdGetField('U');  
-    theMeshField.phi = Region.operators.GamCSM*U;
-              
+    if cfdIsFieldAvailable('phi')
+        phi = cfdGetField('phi');
+        theMeshField.phi = Region.operators.Af\phi;
+    else    
+        U = cfdGetField('U');  
+        theMeshField.phi = Region.operators.GamCSM*U;
+    end
+
     % Store mesh field in data base
     cfdSetMeshField(theMeshField);
 end

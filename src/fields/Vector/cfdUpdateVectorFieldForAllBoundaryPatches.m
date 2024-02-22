@@ -11,7 +11,7 @@ for iBPatch=1:theNumberOfBPatches
     % WALL
     %
     if strcmp(thePhysicalPatchType,'wall')
-        if strcmp(theBCType,'fixedValue')
+        if strcmp(theBCType,'fixedValue') || strcmp(theBCType,'calculated')
             updateFixedValue(iBPatch,theFieldName);
         elseif strcmp(theBCType,'zeroGradient')
             updateZeroGradient(iBPatch,theFieldName);

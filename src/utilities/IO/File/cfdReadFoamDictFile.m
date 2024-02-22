@@ -54,6 +54,10 @@ while ~feof(fid)
             tline = extractBefore(tline, '//');
         end
 
+        if contains(tline, '#')
+            tline = extractBefore(tline, '#');
+        end
+
         if contains(tline, '/*') && contains(tline, '*/')
             tline = extractBetween(tline, '/*', '*/');
         end
