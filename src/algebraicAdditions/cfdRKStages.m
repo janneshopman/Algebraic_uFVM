@@ -64,6 +64,19 @@ Uf = cfdGetField('Uf');
 % For now just implement first order
 pPred = pnPredCoef * p;
 
+% Pressure reference cell and value
+addSource = op.Pois.addSource;
+Lap = op.Pois.Lap;
+
+% Makes time-step dependent adjustments, so don't store changes
+if Region.operators.Pois.pRefRequired
+    iCell = Region.foamDictionary.fvSolution.AlguFVM.pRefCell + 1;
+    pCorrRefValue = Region.foamDictionary.fvSolution.AlguFVM.pRefValue - pPred(iCell);
+
+   addSource(iCell) = addSource(iCell) + Lap(iCell,iCell)*pCorrRefValue; 
+   Lap(iCell,iCell) = 2*Lap(iCell,iCell);
+end
+
 % Reset values for RK stages
 dtpCorr = deltaT * cfdGetInternalField(pCorr, 'vsf');
 UOld = U;
@@ -81,10 +94,10 @@ for iStage = 1:RK.nStages + 1
 
     if ~((iStage == 1) && (RK.aTab(1, 1) == 0))     % Skip stage if (first & explicit)
         divUcp = cfdGetInternalField(op.Mc * Ucp, 'vsf');
-        source = divUcp + cdt * op.Pois.addSource;
+        source = divUcp + cdt * addSource;
 
         % Include preconditioner (To do - 4)
-        dtpCorr = cfdCheckpcg(-op.Pois.Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtpCorr, 1)), speye(size(dtpCorr, 1)), dtpCorr);
+        dtpCorr = cfdCheckpcg(-Lap, -source, sol.tolerance, sol.maxIter, speye(size(dtpCorr, 1)), speye(size(dtpCorr, 1)), dtpCorr);
 
         pCorr = cfdSetInternalField(pCorr, dtpCorr/cdt, 'vsf');
         pCorr = cfdBCUpdate(pCorr, 'pCorr');

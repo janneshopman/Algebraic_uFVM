@@ -186,16 +186,7 @@ for iBPatch = 1:theNumberOfBoundaryPatches
     end
 end
 
-
-% Pressure reference cell and value
-if pRefRequired
-    iCell = Region.foamDictionary.fvSolution.AlguFVM.pRefCell + 1;
-    value = Region.foamDictionary.fvSolution.AlguFVM.pRefValue;
-
-   addSource(iCell) = addSource(iCell) + Lap(iCell,iCell)*value; 
-   Lap(iCell,iCell) = 2*Lap(iCell,iCell);
-end
-
 % Store
 Region.operators.Pois.Lap = Lap;
 Region.operators.Pois.addSource =  addSource;
+Region.operators.Pois.pRefRequired = pRefRequired;
