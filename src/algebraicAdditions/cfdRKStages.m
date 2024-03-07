@@ -13,28 +13,6 @@ else
     sol = fvSol.solvers.p;
 end
 
-pnPredCoef = fvSol.AlguFVM.pnPredCoef;
-
-if pnPredCoef < 0.0
-    deltaT = cfdGetDeltaT;
-    
-    p = cfdGetField('p');
-    U = cfdGetField('U');
-    Uf = cfdGetField('Uf');
-    
-    % Calculate checkerboarding coefficient
-    pLcp = -diag(op.OmegaIn)'*cfdGetInternalField(op.Gc*p, 'vvf').^2;
-    pLp = -diag(op.OmegaSIn)'*(op.G*p).^2;
-    
-    if ~pLp == 0
-        Ccb = 1 - pLcp/pLp;
-    else
-        Ccb = 0;
-    end    
-
-    pnPredCoef = 1- Ccb;
-end
-
 LapStencil = fvSol.AlguFVM.LapStencil;
 PWIM = fvSol.AlguFVM.PWIM;
 
@@ -51,6 +29,24 @@ U = cfdGetField('U');
 Uf = cfdGetField('Uf');
 
 % Pressure predictor
+pnPredCoef = fvSol.AlguFVM.pnPredCoef;
+
+if pnPredCoef < 0.0
+    deltaT = cfdGetDeltaT;
+    
+    % Calculate checkerboarding coefficient
+    pLcp = -diag(op.OmegaIn)'*cfdGetInternalField(op.Gc*p, 'vvf').^2;
+    pLp = -diag(op.OmegaSIn)'*(op.G*p).^2;
+    
+    if ~pLp == 0
+        Ccb = 1 - pLcp/pLp;
+    else
+        Ccb = 0;
+    end    
+
+    pnPredCoef = 1 - Ccb;
+end
+
 % Higher order pPred:
 % if pPredOrder == 0
 %     pPred = 0;
@@ -70,7 +66,7 @@ Lap = op.Pois.Lap;
 
 % Makes time-step dependent adjustments, so don't store changes
 if Region.operators.Pois.pRefRequired
-    iCell = Region.foamDictionary.fvSolution.AlguFVM.pRefCell + 1;
+    iCell = Region.foamDictionary.fvSolution.AlguFVM.pRefCell;
     pCorrRefValue = Region.foamDictionary.fvSolution.AlguFVM.pRefValue - pPred(iCell);
 
    addSource(iCell) = addSource(iCell) + Lap(iCell,iCell)*pCorrRefValue; 
@@ -103,18 +99,27 @@ for iStage = 1:RK.nStages + 1
         pCorr = cfdBCUpdate(pCorr, 'pCorr');
 
         % Velocity update
-        U = Ucp - cdt * op.Gc * pCorr;
-        Uf = op.GamCS*Ucp - cdt * op.G * pCorr;
-
-        if ~PWIM
-            if strcmpi(LapStencil, 'compact')
-                U = U + (op.GamSC*op.GamCS - speye(theNumberOfElements)) * Ucp;
-            elseif strcmpi(LapStencil, 'wide')
-                Uf = Uf + cdt * (speye(theNumberOfFaces) - op.GamCS*op.GamSC) * op.G * pCorr;
+        if strcmp(LapStencil, 'wide')
+            U = Ucp - cdt * op.Gc * pCorr;
+            U = cfdBCUpdate(U, 'U');
+    
+            if PWIM
+                Uf = op.GamCS*Ucp - cdt * op.G * pCorr;
+            else
+                Uf = op.GamCS*U;
             end
+        elseif strcmp(LapStencil, 'compact')
+            Uf = op.GamCS*Ucp - cdt * op.G * pCorr;
+    
+            if PWIM
+                U = Ucp - cdt * op.Gc * pCorr;
+            else
+                U = op.GamSC*Uf;
+            end
+            U = cfdBCUpdate(U, 'U');
+        else
+            error('LapStencil should be set to wide or compact')
         end
-
-        U = cfdBCUpdate(U, 'U');
     end
 
     if iStage <= RK.nStages
