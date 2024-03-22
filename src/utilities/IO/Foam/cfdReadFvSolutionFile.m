@@ -61,6 +61,7 @@ if isfield(fvSolutionDict, 'AlguFVM')
     for iEntry=1:length(entryNames)
         if ~isstruct(fvSolutionDict.AlguFVM.(entryNames{iEntry}))
             if strcmp(entryNames{iEntry}, 'pRefCell')
+                % N.B. if pRefCell is given for an OpenFOAM case, add 1
                 Region.foamDictionary.fvSolution.AlguFVM.(entryNames{iEntry}) = eval(fvSolutionDict.AlguFVM.(entryNames{iEntry})) + 1;
             elseif strcmp(entryNames{iEntry}, 'pRefPoint')
                 pointString = fvSolutionDict.AlguFVM.(entryNames{iEntry});
@@ -96,6 +97,8 @@ if isfield(fvSolutionDict, 'AlguFVM')
             pRefPoint = Region.foamDictionary.fvSolution.AlguFVM.pRefPoint';
             pRefCell = cfdLineSampleIndices(Region.mesh, pRefPoint, pRefPoint, 1);
         else
+            % If no pRefCell can be generated, directly set to 1 (equivalent to OpenFOAM 0)
+            disp('No pRefCell nor -Point given, setting pRefCell = 1')
             pRefCell = 1;
         end
         Region.foamDictionary.fvSolution.AlguFVM.pRefCell = pRefCell;
@@ -111,7 +114,7 @@ else
     'PWIM', true, ...
     'interpolation', 'volumetric', ...
     'pnPredCoef', 0, ...
-    'pRefCell', 0, ...
+    'pRefCell', 1, ...
     'pRefValue', 0 ...
     );
 end

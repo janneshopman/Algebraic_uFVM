@@ -112,19 +112,38 @@ G = -OmegaS\M.';
 Gg = Omega\(kron(eye(3), M)*Nf.');
 L = M*G;
 
+
+
 % - Interpolators
-% N.B. PiSC is not straightforward, especially considering empty boundary
-% conditions will lead to extra faces, empty right now is symmetry which is
-% incorrect for 2D PiSC interpolations
+% N.B. PiSC is not straightforward, especially in 1 or 2D
+% 1/NDim is used to correct for this
+% Not sure if PiSC should ever be used from differential geometry viewpoint
+
+% Find if mesh is 2D or 3D
+% Assume 2D if empty patch is found, 1D not implemented
+NDim = 3;
+for iBPatch=1:theNumberOfBoundaryPatches
+    theBCInfo = cfdGetBoundaryPatchRef(iBPatch);
+    thePhysicalPatchType = theBCInfo.type;
+
+    if strcmp(thePhysicalPatchType,'empty')
+        NDim = 2;
+        break;
+    end
+end
+
 PiCSM = Tfc.'/2;
+PiSCM = 1/NDim * PiCSM.';
 GamCSM = Nf*kron(eye(3), PiCSM);
 GamSCM = Omega\(GamCSM.'*OmegaS);
 
 PiCSL = Wnf*Tfo.' + Wof*Tfn.';
+PiSCL = 1/NDim * PiCSL.';
 GamCSL = Nf*kron(eye(3), PiCSL);
 GamSCL = Omega\(GamCSL.'*OmegaS);
 
 PiCSV = Wof*Tfo.' + Wnf*Tfn.';
+PiSCV = 1/NDim * PiCSV.';
 GamCSV = Nf*kron(eye(3), PiCSV);
 GamSCV = Omega\(GamCSV.'*OmegaS);
 
@@ -137,9 +156,27 @@ elseif strcmp(Region.foamDictionary.fvSolution.AlguFVM.interpolation, 'volumetri
     PiCS = PiCSV;
 end
 
+PiSC = 1/NDim * PiCS.';
 GamCS = Nf*kron(eye(3), PiCS);
 GamSC = Omega\(GamCS.'*OmegaS);
 
+% - Back and forth interpolators 
+% N.B. not symmetric because of boundary corrections
+
+GamCSC = GamSC*GamCS;
+% Replace rows of ghost cells with 1's on diagonal
+bElementIndices = theNumberOfElements + (1:theNumberOfBFaces);
+bElementIndicesXYZ = reshape(double(ncTot) * [0, 1, 2] + double(bElementIndices'), 1, []);
+GamCSCbElementsXYZ = speye(size(GamCSC));
+GamCSC(bElementIndicesXYZ,:) = GamCSCbElementsXYZ(bElementIndicesXYZ,:);
+
+GamSCS = GamCS*GamSC;
+% Replace rows of boundary faces with 1's on diagonal
+bFaceIndices = theNumberOfInteriorFaces + (1:theNumberOfBFaces);
+GamSCSbFaces = speye(size(GamSCS));
+GamSCS(bFaceIndices,:) = GamSCSbFaces(bFaceIndices,:);
+
+% Collocated operators
 Mc = M*GamCS;
 Gc = -Omega\(GamCS.'*M.');
 
@@ -176,17 +213,23 @@ Region.operators.Gg = Gg;
 Region.operators.L = L;
 
 Region.operators.PiCSM = PiCSM;
+Region.operators.PiSCM = PiSCM;
 Region.operators.GamCSM = GamCSM;
 Region.operators.GamSCM = GamSCM;
 Region.operators.PiCSL = PiCSL;
+Region.operators.PiSCL = PiSCL;
 Region.operators.GamCSL = GamCSL;
 Region.operators.GamSCL = GamSCL;
 Region.operators.PiCSV = PiCSV;
+Region.operators.PiSCV = PiSCV;
 Region.operators.GamCSV = GamCSV;
 Region.operators.GamSCV = GamSCV;
 Region.operators.PiCS = PiCS;
+Region.operators.PiSC = PiSC;
 Region.operators.GamCS = GamCS;
 Region.operators.GamSC = GamSC;
+Region.operators.GamCSC = GamCSC;
+Region.operators.GamSCS = GamSCS;
 
 Region.operators.Mc= Mc;
 Region.operators.Gc = Gc;
