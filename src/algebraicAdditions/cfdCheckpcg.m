@@ -12,7 +12,7 @@ switch flag
     case 2
         error('preconditioner M was ill-conditioned.');
     case 3 
-        error('PCG stagnated (two consecutive iterates were the same).');
+        warning('PCG stagnated (two consecutive iterates were the same).');
     case 4 
         error('one of the scalar quantities calculated during PCG became too small or too large to continue computing.');
     otherwise
