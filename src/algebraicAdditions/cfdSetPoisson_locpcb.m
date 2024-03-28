@@ -1,10 +1,9 @@
-function cfdSetPoisson
+function cfdSetPoisson_locpcb
 
 tol = 1E-9;     % Cleaning tolerance
 
 global Region;
 
-LapStencil = Region.foamDictionary.fvSolution.AlguFVM.LapStencil;
 interpolation = Region.foamDictionary.fvSolution.AlguFVM.interpolation;
 
 Af = Region.operators.Af;
@@ -138,46 +137,14 @@ for iSt = 1:length(makeStencils)
     for iBPatch = 1:theNumberOfBoundaryPatches
         BType = Region.fluid.p.boundaryPatchRef{iBPatch}.type;
     
-        iBFaces = cfdGetBFaceIndicesForBoundaryPatch(iBPatch);
-        owners_b = cfdGetOwnersSubArrayForBoundaryPatch(iBPatch);    
-    
         if strcmp(BType, 'fixedValue') || strcmp(BType, 'noSlip')
-            if strcmp(LapStencil, 'wide')
-                error('BC not implemented for wide stencil Lap')
-            end
-    
-            % Add diagonal coefficient to Lap
-            % Add RHS modification
-            % Set pRefRequired
-    
-            pRefRequired = false;
-    
-            % Initialize BC value as 0 for noSlip
-            theBCValue = zeros(length(iBFaces), 1);
-            
-            % Change value if fixedValue
-            if strcmp(BType, 'fixedValue')
-                theBCValue = cfdValueForBoundaryPatch(Region.fluid.p.name, iBPatch);
-    
-                % Extend to vector if uniform value is provided
-                if size(theBCValue, 1)==1
-                    theBCValue = theBCValue*ones(length(iBFaces),1);
-                end
-            end
-    
-            % Calculate coefficients
-            faceCoefs = -2*(diag(Dnf).\diag(Af));
-    
-            % Modify diagonal and RHS
-            Lap = Lap + sparse(owners_b, owners_b, faceCoefs(iBFaces), theNumberOfElements, theNumberOfElements);
-            addSource(owners_b) = addSource(owners_b) + faceCoefs(iBFaces).*theBCValue;
-    
+            error('BC not implemented for Lap')
         elseif strcmp(BType, 'zeroGradient') ...
-                || strcmp(BType, 'cyclic') ...
-                || strcmp(BType, 'slip') ...
-                || strcmp(BType, 'outlet') ...
-                || strcmp(BType, 'symmetry') ...
-                || strcmp(BType, 'empty')
+            || strcmp(BType, 'cyclic') ...
+            || strcmp(BType, 'slip') ...
+            || strcmp(BType, 'outlet') ...
+            || strcmp(BType, 'symmetry') ...
+            || strcmp(BType, 'empty')
     
             % Boundary connections already excluded
             % Cyclic connections already set
@@ -188,28 +155,12 @@ for iSt = 1:length(makeStencils)
 
     if strcmp(makeStencil, 'wide')
         LapWide = Lap;
-        addSourceWide = addSource;
     elseif strcmp(makeStencil, 'compact')
         LapComp = Lap;
-        addSourceComp = addSource;
     end
 end
 
-% Choose Lap according to stencil
-if strcmp(LapStencil, 'compact')
-    Lap = LapComp;
-    addSource = addSourceComp;
-    fprintf("Setting compact");
-elseif strcmp(LapStencil, 'wide')
-    Lap = LapWide;
-    addSource = addSourceWide;
-    fprintf("Setting wide");
-else
-    error('set LapStencil in fvSolutions to  \"compact\" or \"wide\".')
-end
-
 % Store
-Region.operators.Pois.Lap = Lap;
 Region.operators.Pois.addSource =  addSource;
 Region.operators.Pois.pRefRequired = pRefRequired;
 Region.operators.Pois.LapComp = LapComp;

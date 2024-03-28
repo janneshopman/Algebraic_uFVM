@@ -1,4 +1,4 @@
-function cfdSetTGV
+function cfdSetTGVFields
 
 global Region;
 

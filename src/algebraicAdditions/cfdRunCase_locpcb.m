@@ -3,8 +3,6 @@ function cfdRunCase_locpcb
 
 cfdStatistics;
 
-global Region
-
 % Start steady false transience loop
 while (cfdDoTransientLoop)
 
@@ -21,7 +19,7 @@ while (cfdDoTransientLoop)
 
     cfdStatistics;
 
-    localpcb;
+    monitorOutput;
 
     cfdWriteResults;
 end

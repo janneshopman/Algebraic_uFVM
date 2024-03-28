@@ -1,22 +1,22 @@
 %AlgebraicAdjustment
-function cfdUpdateScalarFieldForAllBoundaryPatches(theFieldName)
+function theField = cfdUpdateScalarBocoLike(theField, theLikeFieldName)
 
 theNumberOfBPatches = cfdGetNumberOfBPatches;
 
 for iBPatch=1:theNumberOfBPatches
     theBCInfo = cfdGetBoundaryPatchRef(iBPatch);
     thePhysicalPatchType = theBCInfo.type;
-    theBCType = cfdBcForBoundaryPatch(theFieldName, iBPatch);
+    theBCType = cfdBcForBoundaryPatch(theLikeFieldName, iBPatch);
     %
     % WALL
     %
     if strcmp(thePhysicalPatchType,'wall')
         if strcmp(theBCType,'fixedValue') || strcmp(theBCType,'calculated')
-            cfdUpdateFixedValue(iBPatch,theFieldName);
+            theField = cfdUpdateFixedValue(iBPatch, theField, theLikeFieldName);
         elseif strcmp(theBCType,'zeroGradient') || strcmp(theBCType,'slip')
-            cfdUpdateZeroGradient(iBPatch,theFieldName);
+            theField = cfdUpdateZeroGradient(iBPatch, theField);
         elseif strcmp(theBCType,'noSlip')
-            cfdUpdateNoSlip(iBPatch,theFieldName);
+            theField = cfdUpdateNoSlip(iBPatch, theField);
         else
             error([theBCType ' bc not defined']);
         end
@@ -25,9 +25,9 @@ for iBPatch=1:theNumberOfBPatches
         %
     elseif strcmp(thePhysicalPatchType,'inlet')
         if strcmp(theBCType,'fixedValue')
-            cfdUpdateFixedValue(iBPatch,theFieldName);
+            theField = cfdUpdateFixedValue(iBPatch, theField, theLikeFieldName);
         elseif strcmp(theBCType,'zeroGradient')
-            cfdUpdateZeroGradient(iBPatch,theFieldName);
+            theField = cfdUpdateZeroGradient(iBPatch, theField);
         else
             error('Inlet bc not defined');
         end
@@ -36,9 +36,9 @@ for iBPatch=1:theNumberOfBPatches
         %
     elseif strcmp(thePhysicalPatchType,'outlet')
         if strcmp(theBCType,'fixedValue')
-            cfdUpdateFixedValue(iBPatch,theFieldName);            
+            theField = cfdUpdateFixedValue(iBPatch, theField, theLikeFieldName);            
         elseif strcmp(theBCType,'zeroGradient') || strcmp(theBCType,'outlet')
-            cfdUpdateZeroGradient(iBPatch,theFieldName);            
+            theField = cfdUpdateZeroGradient(iBPatch, theField);            
         else
             error([theBCType 'Outlet bc not defined']);
         end
@@ -46,7 +46,7 @@ for iBPatch=1:theNumberOfBPatches
         % SYMMETRY
         %
     elseif strcmp(thePhysicalPatchType,'symmetry')
-        cfdUpdateZeroGradient(iBPatch,theFieldName);
+        theField = cfdUpdateZeroGradient(iBPatch, theField);
         %
         % EMPTY
         %        
@@ -56,7 +56,7 @@ for iBPatch=1:theNumberOfBPatches
         % CYCLIC
         %        
     elseif strcmp(thePhysicalPatchType,'cyclic')      
-        updateCyclic(iBPatch, theFieldName);     
+        theField = updateCyclic(iBPatch, theField);     
     else
         error([thePhysicalPatchType '<<<< Physical Condition bc not defined']);
         
@@ -71,74 +71,53 @@ end
 %===================================================
 % Fixed Value
 %===================================================
-function cfdUpdateFixedValue(iBPatch, theFieldName)
+function theField = cfdUpdateFixedValue(iBPatch, theField, theLikeFieldName)
 
 % Get info
 iBElements = cfdGetBoundaryElementsSubArrayForBoundaryPatch(iBPatch);
 owners_b = cfdGetOwnersSubArrayForBoundaryPatch(iBPatch);
 
-% Get field
-theScalarField = cfdGetMeshField(theFieldName);
-
 % Apply cfdBoundary condition
-theBCValue = cfdValueForBoundaryPatch(theFieldName, iBPatch);
+theBCValue = cfdValueForBoundaryPatch(theLikeFieldName, iBPatch);
 if size(theBCValue, 1)>1
-    theScalarField.phi(iBElements) = 2.0*theBCValue - theScalarField.phi(owners_b);
+    theField(iBElements) = 2.0*theBCValue - theField(owners_b);
 else
-    theScalarField.phi(iBElements) = 2.0*theBCValue*ones(length(iBElements),1) - theScalarField.phi(owners_b);
+    theField(iBElements) = 2.0*theBCValue*ones(length(iBElements),1) - theField(owners_b);
 end
-
-% Store
-cfdSetMeshField(theScalarField);
-
 end
 
 
 %===================================================
 % No Slip
 %===================================================
-function cfdUpdateNoSlip(iBPatch, theFieldName)
+function theField = cfdUpdateNoSlip(iBPatch, theField)
 
 % Get info
 iBElements = cfdGetBoundaryElementsSubArrayForBoundaryPatch(iBPatch);
 owners_b = cfdGetOwnersSubArrayForBoundaryPatch(iBPatch);
 
-% Get field
-theScalarField = cfdGetMeshField(theFieldName);
-
 % Apply cfdBoundary condition
-theScalarField.phi(iBElements) = -theScalarField.phi(owners_b);
-
-% Store
-cfdSetMeshField(theScalarField);
-
+theField(iBElements) = -theField(owners_b);
 end
 
 
 %===================================================
 % Zero Gradient
 %===================================================
-function cfdUpdateZeroGradient(iBPatch, theFieldName)
+function theField = cfdUpdateZeroGradient(iBPatch, theField)
 
 % Get info
 iBElements = cfdGetBoundaryElementsSubArrayForBoundaryPatch(iBPatch);
 owners_b = cfdGetOwnersSubArrayForBoundaryPatch(iBPatch);
 
-% Get field
-theScalarField = cfdGetMeshField(theFieldName);
-
 % Copy owner values
-theScalarField.phi(iBElements) = theScalarField.phi(owners_b);
-
-% Store
-cfdSetMeshField(theScalarField);
-
+theField(iBElements) = theField(owners_b);
 end
 
 %===================================================
 % Cyclic
 %===================================================
-function updateCyclic(iBPatch, theFieldName)
+function theField = updateCyclic(iBPatch, theField)
 
 theBCInfo = cfdGetBoundaryPatchRef(iBPatch);
 
@@ -155,10 +134,5 @@ for iNBPatch=1:theNumberOfBoundaryPatches
     end
 end   
 
-theScalarField = cfdGetMeshField(theFieldName);
-
-theScalarField.phi(iBElements) = theScalarField.phi(owners_Nb);
-
-cfdSetMeshField(theScalarField);
-
+theField(iBElements) = theField(owners_Nb);
 end

@@ -1,4 +1,4 @@
-function cfdCreateGcp
+function cfdCreateGcp_locpcb
 
 if ~cfdIsFieldAvailable('Gcp')
     global Region
