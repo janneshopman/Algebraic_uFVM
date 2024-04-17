@@ -1,0 +1,38 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2012                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSolution;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solvers
+{
+    p
+    {
+        solver          PCG;    //Dummy, since only pcg is implemented
+        tolerance       1e-06;
+    }
+}
+
+AlguFVM
+{
+    scheme          ForwardEuler;
+    interpolation   volumetric;
+    LapStencil      compact;
+    PWIM            true;
+    pnPredCoef      0;
+    pRefCell        0;
+    pRefValue       0;
+}
+
+// ************************************************************************* //
