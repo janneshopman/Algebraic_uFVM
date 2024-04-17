@@ -29,6 +29,8 @@ pCorr = cfdGetField('pCorr');
 U = cfdGetField('U');
 Uf = cfdGetField('Uf');
 Gcp = cfdGetField('Gcp');
+Gam = cfdGetField('Gam');
+UMag = cfdGetField('UMag');
 
 % Calculate global checkerboard coefficient
 pLcp = -diag(op.OmegaIn)'*cfdGetInternalField(op.Gc*p, 'vvf').^2;
@@ -167,8 +169,12 @@ else
 end
 Gcp = cfdBCUpdate(Gcp, 'Gcp');
 
+UMag = sqrt(cfdCellDot(U, U));
+
 cfdSetField(p, 'p');
 cfdSetField(p, 'pCorr');
 cfdSetField(U, 'U');
 cfdSetField(Uf, 'Uf');
 cfdSetField(Gcp, 'Gcp');
+cfdSetField(gammaCb, 'Gam');
+cfdSetField(UMag, 'UMag');

@@ -19,7 +19,5 @@ while (cfdDoTransientLoop)
 
     cfdStatistics;
 
-    monitorOutput;
-
     cfdWriteResults;
 end

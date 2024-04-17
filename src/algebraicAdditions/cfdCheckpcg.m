@@ -14,6 +14,6 @@ switch flag
     case 3 
         warning('PCG stagnated (two consecutive iterates were the same).');
     case 4 
-        error('one of the scalar quantities calculated during PCG became too small or too large to continue computing.');
+        warning('one of the scalar quantities calculated during PCG became too small or too large to continue computing.');
     otherwise
 end
