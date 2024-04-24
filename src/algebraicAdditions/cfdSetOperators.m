@@ -133,17 +133,17 @@ for iBPatch=1:theNumberOfBoundaryPatches
 end
 
 PiCSM = Tfc.'/2;
-PiSCM = 1/NDim * PiCSM.';
+PiSCM = 1/NDim * OmegaC\(PiCSM.'*OmegaS);
 GamCSM = Nf*kron(eye(3), PiCSM);
 GamSCM = Omega\(GamCSM.'*OmegaS);
 
 PiCSL = Wnf*Tfo.' + Wof*Tfn.';
-PiSCL = 1/NDim * PiCSL.';
+PiSCL = 1/NDim * OmegaC\(PiCSL.'*OmegaS);
 GamCSL = Nf*kron(eye(3), PiCSL);
 GamSCL = Omega\(GamCSL.'*OmegaS);
 
 PiCSV = Wof*Tfo.' + Wnf*Tfn.';
-PiSCV = 1/NDim * PiCSV.';
+PiSCV = 1/NDim * OmegaC\(PiCSV.'*OmegaS);
 GamCSV = Nf*kron(eye(3), PiCSV);
 GamSCV = Omega\(GamCSV.'*OmegaS);
 

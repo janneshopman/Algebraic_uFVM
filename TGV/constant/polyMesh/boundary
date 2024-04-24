@@ -1,0 +1,69 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2012                                  |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       polyBoundaryMesh;
+    location    "constant/polyMesh";
+    object      boundary;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+5
+(
+    upperBoundary
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          33;
+        startFace       2112;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  lowerBoundary;
+    }
+    lowerBoundary
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          33;
+        startFace       2145;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  upperBoundary;
+    }
+    leftBoundary
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          33;
+        startFace       2178;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  rightBoundary;
+    }
+    rightBoundary
+    {
+        type            cyclic;
+        inGroups        1(cyclic);
+        nFaces          33;
+        startFace       2211;
+        matchTolerance  0.0001;
+        transform       unknown;
+        neighbourPatch  leftBoundary;
+    }
+    frontAndBack
+    {
+        type            empty;
+        inGroups        1(empty);
+        nFaces          2178;
+        startFace       2244;
+    }
+)
+
+// ************************************************************************* //
