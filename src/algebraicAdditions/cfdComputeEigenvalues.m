@@ -24,7 +24,7 @@ if rem(nite,fs) == 0
         figure( 1 );
         rreal = real(Region.evals.ev(Uproj >= lim));
         iimag = abs(imag(Region.evals.ev(Uproj >= lim)));
-        filename = strcat(pwd,'/plots/evals.pdf');
+        filename = strcat(pwd,'/evals.pdf');
         scatter(deltaT*rreal,deltaT*iimag,[],Uproj(Uproj >= lim),'filled');
         axis equal
         colorbar

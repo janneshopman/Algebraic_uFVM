@@ -12,11 +12,11 @@ if rem(nite,fs) == 0
     Region.evals.max_ev = ev;
     phi = atan(imag(ev)/abs(real(ev)));
 
-    rr = linspace(0.1,4,1000);
+    rr = linspace(0.1,4,10000);
     for i=1:length(rr)
        zz = -rr(i)*cos(phi)+1i*rr(i)*sin(phi);
        Rz = Region.evals.R(zz);
-       if abs(abs(Rz)-1.0) < 1e-2
+       if abs(abs(Rz)-1.0) < 1e-3
             dT = rr(i)/max_ev;
             ii=i;
        end
