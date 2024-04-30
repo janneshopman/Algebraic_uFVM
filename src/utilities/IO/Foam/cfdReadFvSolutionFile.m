@@ -106,7 +106,7 @@ if isfield(fvSolutionDict, 'AlguFVM')
     if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'pRefValue')
         Region.foamDictionary.fvSolution.AlguFVM.pRefValue = 0;
     end
-
+   
     if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'perturbate')
         disp('No perturbate, disabled by default')
         Region.foamDictionary.fvSolution.AlguFVM.perturbate = false;
@@ -145,9 +145,9 @@ if isfield(fvSolutionDict, 'AlguFVM')
     end
 
     if Region.foamDictionary.fvSolution.AlguFVM.enableSAT
-        if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'fDT')
-            disp('No fDT given, setting fDT=1.0 by default')
-            Region.foamDictionary.fvSolution.AlguFVM.fDT = 1.0;
+        if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'fdT')
+            disp('No fDT given, setting fdT=1.0 by default')
+            Region.foamDictionary.fvSolution.AlguFVM.fdT = 1.0;
         end
     end
 
