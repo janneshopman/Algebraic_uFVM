@@ -17,9 +17,15 @@ while (cfdDoTransientLoop)
     % Print current simulation time
     cfdPrintCurrentTime;
 
+    cfdComputeEigenvalues;
+
     cfdRKStages;
 
+    cfdSelfAdaptiveTimestep;
+    
     cfdStatistics;   
 
     cfdWriteResults;
+
+    display(Region.time.nTimeStep)
 end

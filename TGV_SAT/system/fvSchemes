@@ -1,0 +1,34 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2012                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         Euler;                      //Dummy, as RK scheme is defined in fvSolutions
+}
+
+laplacianSchemes
+{
+    default         Gauss linear orthogonal;    //Dummy as SP scheme is used, width defined in fvSolutions
+}
+
+interpolationSchemes
+{
+    default         linear;                     //Dummy, as interpolation is defined in fvSolutions
+}
+
+
+// ************************************************************************* //

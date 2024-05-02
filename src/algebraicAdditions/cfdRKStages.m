@@ -25,8 +25,8 @@ nu = Region.foamDictionary.transportProperties.nu.propertyValue;
 
 p = cfdGetField('p');
 pCorr = cfdGetField('pCorr');
-U = cfdGetField('U');
 Uf = cfdGetField('Uf');
+U = cfdGetField('U');
 
 % Pressure predictor
 pnPredCoef = fvSol.AlguFVM.pnPredCoef;
@@ -125,9 +125,12 @@ for iStage = 1:RK.nStages + 1
     if iStage <= RK.nStages
         % Set convective
         Con = kron(eye(3), op.M*spdiags(Uf, 0, theNumberOfFaces, theNumberOfFaces)*op.PiCSM);
+        Dif = nu * kron(eye(3), op.L);
+
+        Region.evals.F = op.Omega\(Dif - Con);
 
         % Set delta U for this stage
-        dUs(:, iStage) = -deltaT * (op.Omega\((Con - nu * kron(eye(3), op.L))*U));
+        dUs(:, iStage) = -deltaT * (op.Omega\((Con - Dif)*U));
     end
 end
 

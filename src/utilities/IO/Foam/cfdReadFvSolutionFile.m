@@ -106,6 +106,73 @@ if isfield(fvSolutionDict, 'AlguFVM')
     if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'pRefValue')
         Region.foamDictionary.fvSolution.AlguFVM.pRefValue = 0;
     end
+   
+    if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'perturbate')
+        disp('No perturbate, disabled by default')
+        Region.foamDictionary.fvSolution.AlguFVM.perturbate = false;
+    end
+
+    if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'computeEV')
+        disp('No computeEV, disabled by default')
+        Region.foamDictionary.fvSolution.AlguFVM.computeEV = false;
+    end
+
+    if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'enableSAT')
+        disp('No enableSAT, disabled by default')
+        Region.foamDictionary.fvSolution.AlguFVM.enableSAT = false;
+    end
+
+    if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'plotSATStats')
+        disp('No plotSATStats, disabled by default')
+        Region.foamDictionary.fvSolution.AlguFVM.plotSATStats = false;
+    end    
+
+    if Region.foamDictionary.fvSolution.AlguFVM.computeEV
+        if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'showRegion')
+            disp('No showRegion, enabled by default')
+            Region.foamDictionary.fvSolution.AlguFVM.showRegion = true;
+        end
+        if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'sampleFreq')
+            disp(['No sampleFreq given, ' ...
+                'setting sampleFreq=200 by default'])
+            Region.foamDictionary.fvSolution.AlguFVM.sampleFreq = 200;
+        end
+        if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'evalPercent')
+            disp(['No evalPercent given, ' ...
+                'setting evalPercent=0.0 by default'])
+            Region.foamDictionary.fvSolution.AlguFVM.evalPercent = 0.0;
+        end        
+    end
+
+    if Region.foamDictionary.fvSolution.AlguFVM.enableSAT
+        if ~isfield(Region.foamDictionary.fvSolution.AlguFVM, 'fdT')
+            disp('No fDT given, setting fdT=1.0 by default')
+            Region.foamDictionary.fvSolution.AlguFVM.fdT = 1.0;
+        end
+    end
+
+
+
+    % If eigenvalues are not computed, SAT is disabled regardless of the 
+    % user input
+    if ~Region.foamDictionary.fvSolution.AlguFVM.computeEV && ...
+            Region.foamDictionary.fvSolution.AlguFVM.enableSAT
+        Region.foamDictionary.fvSolution.AlguFVM.enableSAT = false;
+        disp(['computeEV is disabled by the user, enableSAT is ' ...
+            'disabled automatically'])
+    end
+    
+    % If SAT is disabled, plotStats is disabled regardless of the user 
+    % input
+    if ~Region.foamDictionary.fvSolution.AlguFVM.enableSAT && ...
+            Region.foamDictionary.fvSolution.AlguFVM.plotSATStats
+        Region.foamDictionary.fvSolution.AlguFVM.plotSATStats = false;
+        disp(['enableSAT is disabled by the user, plotSATStats is ' ...
+            'disabled automatically'])
+    end
+
+
+
 else
     disp('fvSolutionDict.AlguFVM dictionary not found, creating default')
     Region.foamDictionary.fvSolution.AlguFVM = struct(...
@@ -115,9 +182,14 @@ else
     'interpolation', 'volumetric', ...
     'pnPredCoef', 0, ...
     'pRefCell', 1, ...
-    'pRefValue', 0 ...
+    'pRefValue', 0, ...
+    'perturbate', false, ...
+    'computeEV', false ...
     );
 end
+
+
+
 
 % Relaxation factors
 if isfield(fvSolutionDict, 'relaxationFactors')
