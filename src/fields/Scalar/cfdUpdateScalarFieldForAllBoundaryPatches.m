@@ -12,11 +12,13 @@ for iBPatch=1:theNumberOfBPatches
     %
     if strcmp(thePhysicalPatchType,'wall')
         if strcmp(theBCType,'fixedValue') || strcmp(theBCType,'calculated')
-            cfdUpdateFixedValue(iBPatch,theFieldName);
+            updateFixedValue(iBPatch,theFieldName);
         elseif strcmp(theBCType,'zeroGradient') || strcmp(theBCType,'slip')
-            cfdUpdateZeroGradient(iBPatch,theFieldName);
+            updateZeroGradient(iBPatch,theFieldName);
         elseif strcmp(theBCType,'noSlip')
-            cfdUpdateNoSlip(iBPatch,theFieldName);
+            updateNoSlip(iBPatch,theFieldName);
+        elseif strcmp(theBCType,'cycWall')
+            updateCyclic(iBPatch,theFieldName);            
         else
             error([theBCType ' bc not defined']);
         end
@@ -25,9 +27,9 @@ for iBPatch=1:theNumberOfBPatches
         %
     elseif strcmp(thePhysicalPatchType,'inlet')
         if strcmp(theBCType,'fixedValue')
-            cfdUpdateFixedValue(iBPatch,theFieldName);
+            updateFixedValue(iBPatch,theFieldName);
         elseif strcmp(theBCType,'zeroGradient')
-            cfdUpdateZeroGradient(iBPatch,theFieldName);
+            updateZeroGradient(iBPatch,theFieldName);
         else
             error('Inlet bc not defined');
         end
@@ -36,9 +38,9 @@ for iBPatch=1:theNumberOfBPatches
         %
     elseif strcmp(thePhysicalPatchType,'outlet')
         if strcmp(theBCType,'fixedValue')
-            cfdUpdateFixedValue(iBPatch,theFieldName);            
+            updateFixedValue(iBPatch,theFieldName);            
         elseif strcmp(theBCType,'zeroGradient') || strcmp(theBCType,'outlet')
-            cfdUpdateZeroGradient(iBPatch,theFieldName);            
+            updateZeroGradient(iBPatch,theFieldName);            
         else
             error([theBCType 'Outlet bc not defined']);
         end
@@ -46,7 +48,7 @@ for iBPatch=1:theNumberOfBPatches
         % SYMMETRY
         %
     elseif strcmp(thePhysicalPatchType,'symmetry')
-        cfdUpdateZeroGradient(iBPatch,theFieldName);
+        updateZeroGradient(iBPatch,theFieldName);
         %
         % EMPTY
         %        
@@ -71,7 +73,7 @@ end
 %===================================================
 % Fixed Value
 %===================================================
-function cfdUpdateFixedValue(iBPatch, theFieldName)
+function updateFixedValue(iBPatch, theFieldName)
 
 % Get info
 iBElements = cfdGetBoundaryElementsSubArrayForBoundaryPatch(iBPatch);
@@ -97,7 +99,7 @@ end
 %===================================================
 % No Slip
 %===================================================
-function cfdUpdateNoSlip(iBPatch, theFieldName)
+function updateNoSlip(iBPatch, theFieldName)
 
 % Get info
 iBElements = cfdGetBoundaryElementsSubArrayForBoundaryPatch(iBPatch);
@@ -119,7 +121,7 @@ end
 %===================================================
 % Zero Gradient
 %===================================================
-function cfdUpdateZeroGradient(iBPatch, theFieldName)
+function updateZeroGradient(iBPatch, theFieldName)
 
 % Get info
 iBElements = cfdGetBoundaryElementsSubArrayForBoundaryPatch(iBPatch);

@@ -19,6 +19,8 @@ for iBPatch=1:theNumberOfBPatches
             updateSymmetry(iBPatch,theFieldName);
         elseif strcmp(theBCType,'noSlip')
             updateNoSlip(iBPatch,theFieldName);
+        elseif strcmp(theBCType,'cycWall')
+            updateCyclic(iBPatch,theFieldName);
         else
             error([theBCType ' bc not defined']);
         end
